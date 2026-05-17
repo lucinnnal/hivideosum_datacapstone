@@ -1,0 +1,11 @@
+model_name: "lgai-exaone/k-exaone-236b-a23b"
+api:
+  base_url: "https://mlapi.run/ebbae4bc-0f6c-4bf1-87a1-9f194e9fbbad/v1/chat/completions"
+
+generation:
+  temperature: 0.1
+  top_p: 0.95
+  max_tokens: 8192
+  presence_penalty: 0.0
+  chat_template_kwargs:
+    enable_thinking: False

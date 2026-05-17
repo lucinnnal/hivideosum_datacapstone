@@ -1,0 +1,13 @@
+model_name: "LGAI-EXAONE/EXAONE-4.5-33B"
+served_model_name: "EXAONE-4.5-33B"
+
+vllm:
+  max_model_len: 262144
+  reasoning_parser: "qwen3"
+
+generation:
+  temperature: 1.0
+  top_p: 0.95
+  max_tokens: 32768
+  chat_template_kwargs:
+    enable_thinking: true

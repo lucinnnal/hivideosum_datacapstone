@@ -1,0 +1,281 @@
+/*
+ * Hi-VideoSum 인젝션 패널 스타일.
+ * YouTube DOM과 분리하기 위해 모든 셀렉터는 #hvs-panel 아래 .hvs-* 만 사용.
+ */
+#hvs-panel {
+  --hvs-bg: #100d09;
+  --hvs-surface: #181210;
+  --hvs-surface-2: #201814;
+  --hvs-border: #332820;
+  --hvs-border-soft: #261e18;
+  --hvs-accent: #f5b830;
+  --hvs-accent-dim: rgba(245, 184, 48, .18);
+  --hvs-accent-glow: rgba(245, 184, 48, .09);
+  --hvs-text: #e8e8f2;
+  --hvs-text-muted: #9898b4;
+  --hvs-text-dim: #50506a;
+  --hvs-success: #3ecf8e;
+  --hvs-error: #f06060;
+  --hvs-error-dim: rgba(240, 96, 96, .1);
+
+  background: var(--hvs-bg);
+  border: 1px solid var(--hvs-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 1.5rem;
+  margin: 0 0 16px;
+  color: var(--hvs-text);
+  font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  font-size: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+}
+
+#hvs-panel *, #hvs-panel *::before, #hvs-panel *::after {
+  box-sizing: border-box;
+}
+
+#hvs-panel .hvs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .25rem;
+}
+
+#hvs-panel .hvs-logo {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--hvs-text);
+}
+
+#hvs-panel .hvs-accent { color: var(--hvs-accent); }
+
+#hvs-panel .hvs-settings {
+  background: transparent;
+  border: 1px solid var(--hvs-border);
+  border-radius: 6px;
+  color: var(--hvs-text-muted);
+  cursor: pointer;
+  font-size: .95rem;
+  padding: .2rem .5rem;
+  transition: color .2s, border-color .2s, background .2s;
+}
+
+#hvs-panel .hvs-settings:hover {
+  color: var(--hvs-accent);
+  border-color: var(--hvs-accent);
+  background: var(--hvs-accent-glow);
+}
+
+#hvs-panel .hvs-tagline {
+  font-size: .82rem;
+  color: var(--hvs-text-muted);
+  margin: 0 0 1rem;
+}
+
+#hvs-panel .hvs-submit {
+  width: 100%;
+  background: var(--hvs-accent);
+  border: none;
+  border-radius: 6px;
+  color: #09090f;
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: .8rem 1rem;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s, box-shadow .2s;
+}
+
+#hvs-panel .hvs-submit:hover {
+  opacity: .9;
+  box-shadow: 0 4px 18px rgba(232, 168, 48, .22);
+}
+
+#hvs-panel .hvs-submit:active { transform: translateY(1px); }
+
+#hvs-panel .hvs-submit:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#hvs-panel .hvs-error {
+  background: var(--hvs-error-dim);
+  border: 1px solid rgba(240, 96, 96, .25);
+  border-radius: 6px;
+  color: var(--hvs-error);
+  font-size: .8rem;
+  padding: .75rem .9rem;
+  margin-top: 1rem;
+}
+
+#hvs-panel .hvs-pipeline {
+  margin-top: 1.25rem;
+}
+
+#hvs-panel .hvs-stages {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: .8rem;
+}
+
+#hvs-panel .hvs-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  flex: 1;
+  position: relative;
+}
+
+#hvs-panel .hvs-stage:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 9px);
+  right: calc(-50% + 9px);
+  height: 1px;
+  background: var(--hvs-border);
+  transition: background .5s ease;
+}
+
+#hvs-panel .hvs-stage.hvs-done:not(:last-child)::after {
+  background: var(--hvs-accent);
+}
+
+#hvs-panel .hvs-dot {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--hvs-surface-2);
+  border: 1.5px solid var(--hvs-border);
+  position: relative;
+  z-index: 1;
+  transition: background .35s, border-color .35s, box-shadow .35s;
+}
+
+#hvs-panel .hvs-stage.hvs-done .hvs-dot {
+  background: var(--hvs-accent);
+  border-color: var(--hvs-accent);
+}
+
+#hvs-panel .hvs-stage.hvs-active .hvs-dot {
+  background: var(--hvs-bg);
+  border-color: var(--hvs-accent);
+  box-shadow: 0 0 0 4px var(--hvs-accent-dim), 0 0 0 2px var(--hvs-accent-glow);
+  animation: hvs-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes hvs-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px var(--hvs-accent-dim), 0 0 0 2px var(--hvs-accent-glow); }
+  50% { box-shadow: 0 0 0 8px transparent, 0 0 0 4px transparent; }
+}
+
+#hvs-panel .hvs-stage-label {
+  font-size: .65rem;
+  color: var(--hvs-text-dim);
+  letter-spacing: .04em;
+  text-align: center;
+  transition: color .3s;
+}
+
+#hvs-panel .hvs-stage.hvs-active .hvs-stage-label { color: var(--hvs-accent); }
+#hvs-panel .hvs-stage.hvs-done .hvs-stage-label { color: var(--hvs-text-muted); }
+
+#hvs-panel .hvs-caption {
+  font-size: .75rem;
+  color: var(--hvs-text-muted);
+  text-align: center;
+  margin: 0;
+  min-height: 1.2em;
+}
+
+#hvs-panel .hvs-results {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--hvs-border-soft);
+}
+
+#hvs-panel .hvs-card {
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--hvs-border-soft);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+
+#hvs-panel .hvs-card.hvs-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+#hvs-panel .hvs-meta {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  margin-bottom: .5rem;
+}
+
+#hvs-panel .hvs-num {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--hvs-accent);
+  line-height: 1;
+  opacity: .75;
+}
+
+#hvs-panel .hvs-label {
+  font-size: .68rem;
+  font-weight: 500;
+  color: var(--hvs-text-muted);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+#hvs-panel .hvs-body {
+  font-size: .85rem;
+  color: var(--hvs-text);
+  line-height: 1.75;
+  margin: 0;
+  font-weight: 300;
+  white-space: pre-wrap;
+}
+
+#hvs-panel .hvs-stats {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem 0 .25rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+
+#hvs-panel .hvs-stats.hvs-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+#hvs-panel .hvs-stat-label {
+  display: block;
+  font-size: .6rem;
+  color: var(--hvs-text-dim);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-bottom: .15rem;
+}
+
+#hvs-panel .hvs-stat-value {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .75rem;
+  color: var(--hvs-text-muted);
+}
+
+#hvs-panel .hvs-pass { color: var(--hvs-success); }

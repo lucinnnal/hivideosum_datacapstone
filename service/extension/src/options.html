@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Hi-VideoSum 옵션</title>
+  <style>
+    :root {
+      --bg: #100d09;
+      --surface: #181210;
+      --border: #332820;
+      --accent: #f5b830;
+      --text: #e8e8f2;
+      --text-muted: #9898b4;
+      --text-dim: #50506a;
+      --success: #3ecf8e;
+      --error: #f06060;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 300;
+      min-width: 360px;
+      padding: 1.5rem 1.5rem 1.25rem;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 1.05rem;
+      font-weight: 500;
+      letter-spacing: .03em;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    h1 .accent { color: var(--accent); font-style: italic; }
+
+    label {
+      display: block;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: .4rem;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .82rem;
+      padding: .65rem .8rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input[type="url"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 184, 48, .18);
+    }
+
+    .hint {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: .35rem;
+    }
+
+    .actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #09090f;
+      font-family: inherit;
+      font-size: .75rem;
+      font-weight: 500;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      padding: .55rem .9rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+
+    button:hover { opacity: .9; }
+    button:active { transform: translateY(1px); }
+
+    .status {
+      font-size: .72rem;
+      color: var(--text-muted);
+      min-height: 1em;
+    }
+
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--error); }
+  </style>
+</head>
+<body>
+  <h1>Hi-Video<span class="accent">Sum</span> 옵션</h1>
+
+  <label for="backend">백엔드 URL</label>
+  <input
+    type="url"
+    id="backend"
+    placeholder="http://localhost:8000"
+    autocomplete="off"
+    spellcheck="false"
+  >
+  <p class="hint">hivideosum FastAPI 서버 주소. <code>http://localhost:8000</code> 기본값.</p>
+
+  <div class="actions">
+    <button id="save" type="button">저장</button>
+    <span id="status" class="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

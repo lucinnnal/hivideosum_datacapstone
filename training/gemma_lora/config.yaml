@@ -1,0 +1,41 @@
+# ============================================================
+#  Fine-tuning configuration
+#  Usage: bash run_train.sh [--config path/to/config.yaml]
+# ============================================================
+
+# --- Model & Data ---
+model_id: "google/gemma-4-E4B-it"
+dataset_id: "kim586w/hivideosum_training_dataset"
+output_dir: "./output"
+
+# --- LoRA ---
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  # Regex (string) matches full module path — restricts LoRA to language model
+  # layers only, avoiding Gemma4ClippableLinear wrappers in the vision encoder.
+  target_modules: 'model\.language_model\..*\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)'
+
+# --- Training ---
+training:
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 2   # effective batch = 4 × 2 = 8
+  learning_rate: 2.0e-4
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  optim: adamw_torch_fused
+  max_seq_length: 20000
+  logging_steps: 5
+  save_strategy: epoch
+  save_total_limit: 2
+  bf16: true
+  gradient_checkpointing: true
+  packing: false
+  report_to: wandb
+
+# --- W&B ---
+wandb:
+  project: "hivideosum-lora"
+  run_name: null   # null이면 W&B가 자동 생성

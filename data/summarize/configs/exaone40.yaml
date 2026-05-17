@@ -1,0 +1,12 @@
+model_name: "LGAI-EXAONE/EXAONE-4.0-32B"
+
+vllm:
+  reasoning_parser: "deepseek_r1"
+
+generation:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 4096
+  chat_template_kwargs:
+    enable_thinking: true
+    skip_think: false

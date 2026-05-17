@@ -1,0 +1,56 @@
+# ========== OS ==========
+.DS_Store
+Thumbs.db
+*.swp
+
+# ========== Python ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+
+# ========== IDE ==========
+.idea/
+.vscode/
+*.iml
+
+# ========== Secrets ==========
+.env
+.env.local
+*.env
+!.env.example
+
+# ========== Training artifacts ==========
+# LoRA fine-tuning outputs (wandb, checkpoints) — restored from W&B / HF
+training/gemma_lora/output/
+training/gemma_lora/wandb/
+training/gemma_lora/data/finetune_dataset.jsonl
+**/wandb/
+
+# LoRA adapter weights served by vLLM — distributed separately.
+# Keep adapter_config.json so the serving layout is reproducible.
+service/backend/inference/adapters/**/*.safetensors
+service/backend/inference/adapters/**/*.bin
+
+# ========== Large data ==========
+# The training dataset lives on HuggingFace
+# https://huggingface.co/datasets/kim586w/hivideosum_training_dataset
+data/summarize/data/
+data/summarize/final_construction_data/
+data/summarize/capstone_data/
+data/filter_kexaone/data/
+data/crawl_raw_data/comment_results/
+
+# All produced JSONLs are intermediate / dataset artifacts.
+# Keep channel-list inputs that act as code-like manifests.
+*.jsonl
+!data/crawl_raw_data/inputs/*.jsonl
+
+# ========== Misc ==========
+*.log
+*.pid
+node_modules/

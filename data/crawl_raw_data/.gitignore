@@ -1,0 +1,11 @@
+# Environments
+.env
+
+# Python
+__pycache__/
+.vscode/
+
+# OS-specific
+.DS_Store
+
+comment_results

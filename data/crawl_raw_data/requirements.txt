@@ -1,0 +1,6 @@
+youtube-transcript-api
+youtube-comment-downloader
+yt-dlp
+google-genai
+python-dotenv
+vllm==0.10.0openai

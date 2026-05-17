@@ -1,0 +1,3 @@
+# vllm is installed conditionally in the Dockerfile based on MODEL_FAMILY
+openai
+pyyaml
