@@ -54,3 +54,7 @@ data/crawl_raw_data/comment_results/
 *.log
 *.pid
 node_modules/
+
+# ======= demo videos ==========
+demo/*
+!.gitkeep
