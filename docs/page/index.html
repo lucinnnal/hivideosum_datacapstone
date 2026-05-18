@@ -754,6 +754,9 @@
     .specimen{grid-template-columns:1fr;padding:32px}
     .specimen-aside{border-right:none;border-bottom:1px solid var(--rule-thin);padding:0 0 16px}
   }
+  @media (max-width:1024px){
+    .arch + .reveal[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+  }
   @media (max-width:640px){
     .topbar{flex-direction:column;gap:6px;align-items:flex-start}
     .hero{padding:48px 20px 40px}
@@ -792,12 +795,6 @@
 
 <!-- ───── HERO ───── -->
 <header class="hero">
-  <div class="hero-meta">
-    <span>Project · Mid-Report</span>
-    <span>v0.2 · 2026.05</span>
-    <span>Korean YouTube · 80 channels · ≈10k samples</span>
-  </div>
-
   <div class="hero-tagline">A User-Centric YouTube Summarization & Highlight Service</div>
   <h1>
     Hi&#8209;<span class="accent">VideoSum</span>
@@ -815,7 +812,7 @@
     <span class="sep">/</span>
     <span>Data Science Capstone Project</span>
     <span class="sep">/</span>
-    <span>Advisor: Mina Jung</span>
+    <span>Advisor: Prof Mina Jung</span>
   </div>
 
   <div class="actions">
@@ -848,11 +845,13 @@
       </div>
       <div class="abstract-body" style="grid-column:2 / span 2">
         <p><span class="drop">A</span>s short-form consumption becomes the norm, viewers expect summaries that surface not only what a video is about but also how other people reacted to it. Video summarization can no longer remain at the level of "content compression"; it must evolve into a part of the user experience that conveys the social cues people rely on when deciding whether to watch.</p>
-        <p>Hi-VideoSum builds a resource-efficient, sLLM-based summarization service that never touches video frames. It operates purely on two text signals from Korean YouTube—<em>transcripts</em> and <em>viewer comments</em>. We curate a ~10k-sample dataset spanning 7 categories and ~80 channels, select high-quality comments via an LLM-based three-axis evaluation (informativeness · subjectivity · relevance), and train a LoRA-fine-tuned sLLM that produces a <em>three-paragraph prose summary</em> covering video content, viewer reactions, and standout moments.</p>
+        <p>Hi-VideoSum builds a resource-efficient, sLLM-based summarization service that never touches video frames. It operates purely on two text signals from Korean YouTube—<em>transcripts</em> and <em>viewer comments</em>. We curate a ~10k-sample dataset spanning 7 categories and ~80 channels, select high-quality comments via an LLM-based three-axis evaluation (informativeness · subjectivity · relevance), and fine tune sLLM that produces a <em>three-paragraph prose summary</em> covering video content, viewer reactions, and standout moments.</p>
       </div>
     </div>
 
-    <div class="pillars reveal">
+    <p class="reveal" style="font-family:'Noto Serif KR',serif;font-size:18px;color:var(--ink-soft);margin-top:56px;font-style:italic;letter-spacing:-.005em;">Our service strengths are as follows.</p>
+
+    <div class="pillars reveal" style="margin-top:20px">
       <div class="pillar">
         <div class="num">/01 — Frameless</div>
         <h3>No video frames. Just text.</h3>
@@ -886,17 +885,7 @@
       </div>
     </div>
 
-    <div class="specimen reveal">
-      <div class="specimen-aside">
-        <div class="title">SAMPLE</div>
-        Domain: How-to / Style<br>
-        Length: 14:32<br>
-        Comments: 312<br>
-        Timestamps: 41<br><br>
-        Source: transcript<br>
-        Source: general comments<br>
-        Source: timestamped comments
-      </div>
+    <div class="specimen reveal" style="grid-template-columns:1fr">
       <div class="specimen-body">
         <p>
           <span class="para-label">¶ CONTENT</span>
@@ -925,7 +914,7 @@
       </div>
       <div>
         <h2 class="section-title">The pipeline runs in <em>six stages</em>.</h2>
-        <p class="section-kicker">From channel curation through two filtering passes to prose label generation, resource-efficient LoRA training, and finally a web deployment.</p>
+        <p class="section-kicker">From channel curation through two filtering passes to prose label generation, resource-efficient LoRA training, and finally a web & extension program deployment.</p>
       </div>
     </div>
 
@@ -1015,48 +1004,12 @@
       </div>
     </div>
 
-    <h3 class="display" style="font-size:32px;letter-spacing:-.02em;margin-bottom:24px;font-weight:400">
-      Domains split into <em style="color:var(--accent);font-style:italic;font-weight:500">three distinct profiles</em>.
-    </h3>
-    <p style="font-family:'Noto Serif KR',serif;font-size:15px;color:var(--ink-soft);margin-bottom:32px;max-width:780px;line-height:1.7;">
-      The §4.2 category-wise analysis in our mid-report uncovered three coherent clusters: <em>information-dense</em>, <em>scene-reactive</em>, and <em>audience-resonant</em>. Each profile shows consistent differences in transcript length, timestamp ratio, and the three-axis score distribution.
-    </p>
-
-    <div class="domain-grid reveal">
-      <div class="domain-card">
-        <div class="badge">PROFILE A</div>
-        <h4>Information-dense</h4>
-        <div class="label">정보 밀도형</div>
-        <p>Long transcripts and high informativeness. The transcript alone carries most of the content; comments play a relatively minor supporting role.</p>
-        <div class="traits">
-          <div class="trait"><span>Domain</span><span class="v">Sci/Tech · News</span></div>
-          <div class="trait"><span>Transcript</span><span class="v">long</span></div>
-          <div class="trait"><span>Informativeness</span><span class="v">high</span></div>
-        </div>
-      </div>
-      <div class="domain-card">
-        <div class="badge">PROFILE B</div>
-        <h4>Scene-reactive</h4>
-        <div class="label">장면 반응형</div>
-        <p>Shorter transcripts, but the timestamped-comment ratio dominates. Signal concentrates around viewers pointing at specific moments.</p>
-        <div class="traits">
-          <div class="trait"><span>Domain</span><span class="v">Entertainment · Travel</span></div>
-          <div class="trait"><span>Transcript</span><span class="v">short</span></div>
-          <div class="trait"><span>Timestamp ratio</span><span class="v">high</span></div>
-        </div>
-      </div>
-      <div class="domain-card">
-        <div class="badge">PROFILE C</div>
-        <h4>Audience-resonant</h4>
-        <div class="label">시청자 공감형</div>
-        <p>Subjectivity and relevance scores peak here. Comments do more than react—they engage with the content directly.</p>
-        <div class="traits">
-          <div class="trait"><span>Domain</span><span class="v">Sports · How-to/Style</span></div>
-          <div class="trait"><span>Subj. (How-to)</span><span class="v">2.33 ★</span></div>
-          <div class="trait"><span>Subj. (Sports)</span><span class="v">2.24</span></div>
-        </div>
-      </div>
-    </div>
+    <figure class="reveal" style="margin:0;border:1px solid var(--rule);background:var(--paper);padding:32px;">
+      <figcaption style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:18px;border-bottom:1px solid var(--rule-thin);padding-bottom:10px;">
+        <span style="color:var(--accent);font-weight:600">Figure 02</span> · Channel category distribution across the raw collection
+      </figcaption>
+      <img src="assets/raw_category_distribution.png" alt="Raw category distribution across 80 Korean YouTube channels" style="width:100%;height:auto;display:block;">
+    </figure>
   </div>
 </section>
 
@@ -1235,6 +1188,21 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="reveal" style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <figure style="margin:0;border:1px solid var(--rule);background:var(--paper);padding:24px;display:flex;flex-direction:column;">
+        <figcaption style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:16px;border-bottom:1px solid var(--rule-thin);padding-bottom:10px;">
+          <span style="color:var(--accent);font-weight:600">Figure 03a</span> · Web version
+        </figcaption>
+        <img src="assets/web_ver.png" alt="Hi-VideoSum web version screenshot" style="width:100%;height:auto;display:block;">
+      </figure>
+      <figure style="margin:0;border:1px solid var(--rule);background:var(--paper);padding:24px;display:flex;flex-direction:column;">
+        <figcaption style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:16px;border-bottom:1px solid var(--rule-thin);padding-bottom:10px;">
+          <span style="color:var(--accent);font-weight:600">Figure 03b</span> · Browser extension version
+        </figcaption>
+        <img src="assets/extension_ver.png" alt="Hi-VideoSum browser extension screenshot" style="width:100%;height:auto;display:block;">
+      </figure>
     </div>
   </div>
 </section>
