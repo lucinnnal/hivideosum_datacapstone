@@ -18,8 +18,8 @@ Hi-VideoSum은 **영상 프레임을 보지 않고** 두 가지 텍스트 신호
 hivideosum/
 ├── data/                              # Dataset construction pipeline
 │   ├── crawl_raw_data/                # Step 1–2 — channel curation, transcript & comment scrape
-│   ├── filter_kexaone/                # Step 3–4 — K-EXAONE 3-axis comment filtering
-│   └── summarize/                     # Step 5    — Gemini / EXAONE / K-EXAONE label generation
+│   ├── filter_kexaone/                # Step 3–4 — 3-axis comment filtering (Gemini / K-EXAONE)
+│   └── summarize/                     # Step 5–6 — label generation + HF fine-tuning dataset build
 ├── training/
 │   └── gemma_lora/                    # Step 6    — gemma-4-E4B-it LoRA fine-tuning
 ├── service/
@@ -51,8 +51,9 @@ Each leaf directory keeps its own `README.md` with run instructions; the per-mod
 | 1 | Channel curation                       | `data/crawl_raw_data/inputs/channels.jsonl` | ≈80 Korean channels, 7 top-level + 16 sub-categories |
 | 2 | Raw collection (transcript + comments) | `data/crawl_raw_data/`                       | `combined_data.jsonl` per channel                       |
 | 3 | Rule-based filter (regex, ratio)       | `data/crawl_raw_data/`                       | timestamped vs general comments split                   |
-| 4 | 3-axis LLM filter (info / opinion / relevance ≥ 6) | `data/filter_kexaone/`           | `filtered_comments_kexaone.jsonl`                       |
+| 4 | 3-axis LLM filter (info / opinion / relevance ≥ 6) | `data/filter_kexaone/`           | `filtered_comments_gemini.jsonl` (or `_kexaone.jsonl`)  |
 | 5 | 3-paragraph prose label generation     | `data/summarize/`                            | `summarized_data_gemini.jsonl` (training labels)        |
+| 5b | HF fine-tuning dataset build (+ push) | `data/summarize/`                            | `finetune_dataset.jsonl` → HF Hub                       |
 | 6 | sLLM LoRA fine-tune                    | `training/gemma_lora/`                       | `output/adapter_model.safetensors`                      |
 | 7 | Web service (FastAPI + arq + vLLM)     | `service/backend/`                           | `POST /jobs` → 30–120s → 3-paragraph summary            |
 | 8 | Chrome extension (sidebar on YouTube)  | `service/extension/`                         | DOM-injected `#hvs-panel` calling the backend           |
@@ -61,7 +62,7 @@ Each leaf directory keeps its own `README.md` with run instructions; the per-mod
 
 ## Component smoke tests
 
-각 컴포넌트(① 댓글·자막 크롤링, ② 댓글 필터링, ③ 요약 생성)가 정상 동작하는지 빠르게 확인하기 위한 가이드입니다. 모든 명령은 해당 모듈 디렉토리에서 실행하며, 각 모듈의 README에 더 상세한 옵션이 있습니다.
+각 컴포넌트(① 수집, ② 필터링, ③ 요약, ④ 데이터셋 생성)가 정상 동작하는지 빠르게 확인하기 위한 가이드입니다. 모든 명령은 해당 모듈 디렉토리에서 실행하며, 각 모듈의 README에 더 상세한 옵션이 있습니다.
 
 ### 사전 준비 (공통)
 
@@ -74,10 +75,11 @@ pip install -r requirements.txt
 
 | 컴포넌트 | 권장 conda env | 인증 / 키 |
 |---|---|---|
-| 크롤링 | `datacapstone` (Python 3.10) | (선택) `WEBSHARE_PROXY_*` 프록시 |
-| 필터링 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
-| 필터링 (K-EXAONE) | `kexaone_filter` (Python 3.11) | `K_EXAONE_API_KEY` |
-| 요약 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
+| ① 수집 | `datacapstone` (Python 3.10) | (선택) `WEBSHARE_PROXY_*` 프록시 |
+| ② 필터링 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
+| ② 필터링 (K-EXAONE) | `kexaone_filter` (Python 3.11) | `K_EXAONE_API_KEY` |
+| ③ 요약 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
+| ④ 데이터셋 생성 | `gemini_api` 재사용 가능 | (push 시) `huggingface-cli login` |
 
 ---
 
@@ -179,14 +181,22 @@ conda activate gemini_api          # 필터링과 동일한 env 재사용 가능
 pip install -r requirements.txt
 
 # 3-1. 필터링 결과를 입력으로 복사 (소량 권장)
+#  요약 스크립트는 입력 레코드에 transcript + regular_comments + timestamp_comments + evaluation_result
+#  네 필드가 모두 있어야 합니다. 필터링 출력에는 evaluation_result만 있으므로 크롤링 원본과 video_id 기준으로 합쳐서 넣어야 합니다.
 mkdir -p data
-cp ../filter_kexaone/data/filtered_comments_gemini.jsonl \
-   data/filtered_combined_data.jsonl
-# (실제 학습 데이터셋용 입력 스키마는 transcript + 필터링 통과 댓글이 합쳐진 형태입니다.
-#  스모크 테스트에서는 위 파일을 그대로 넣어도 무방하며, 정식 입력은 build_finetune_dataset.py 등으로 생성)
+python -c "
+import json
+raw = {json.loads(l)['video_id']: json.loads(l) for l in open('../crawl_raw_data/comment_results_test/combined_data.jsonl')}
+ev  = {json.loads(l)['video_id']: json.loads(l) for l in open('../filter_kexaone/data/filtered_comments_gemini.jsonl')}
+with open('data/filtered_combined_data.jsonl','w') as f:
+    for vid, r in raw.items():
+        if vid in ev: f.write(json.dumps({**r, 'evaluation_result': ev[vid]['evaluation_result']}, ensure_ascii=False)+'\n')
+"
 
-# 3-2. 실행
-bash scripts/run_summarize_gemini.sh
+# 3-2. 실행 (스크립트 기본 INPUT_FILE 은 프로젝트별 파일명이므로 env 로 명시)
+INPUT_FILE=data/filtered_combined_data.jsonl \
+OUTPUT_FILE=data/summarized_data_gemini.jsonl \
+  bash scripts/run_summarize_gemini.sh
 ```
 
 **확인 포인트**
@@ -204,15 +214,60 @@ print('--- sample ---'); print(r[0]['summary'][:300] if r else '(empty)')"
 
 ---
 
+### 4) 학습 데이터셋 생성 테스트 (HuggingFace 포맷)
+
+**위치**: `data/summarize/`  
+요약 결과(`summarized_data_gemini.jsonl`)와 필터링 결과(`filtered_comments_gemini.jsonl`)를 합쳐 LoRA 파인튜닝용 messages 포맷(`system / user / assistant`) JSONL을 만들고, 선택적으로 HuggingFace Hub에 업로드합니다.
+
+```bash
+cd data/summarize
+conda activate gemini_api        # 동일 env 재사용 가능
+pip install -r requirements.txt  # datasets 패키지가 push_to_hub 시 필요할 수 있음
+
+# 4-1. messages 포맷 JSONL 생성 (로컬 출력)
+#  --input 은 ③단계에서 만든 "transcript + 댓글 + evaluation_result" 가 모두 들어있는 merged 파일이어야 합니다.
+python build_finetune_dataset.py \
+  --input     data/filtered_combined_data.jsonl \
+  --summaries data/summarized_data_gemini.jsonl \
+  --output    data/finetune_dataset.jsonl
+
+# 4-2. (선택) HuggingFace Hub 업로드 dry-run 격 확인
+#      먼저 huggingface-cli login 으로 토큰 등록
+python -c "
+import json
+r=[json.loads(l) for l in open('data/finetune_dataset.jsonl')]
+print('records:', len(r))
+print('roles per sample:', [m['role'] for m in r[0]['messages']])
+print('--- user preview ---'); print(r[0]['messages'][1]['content'][:300])
+print('--- assistant preview ---'); print(r[0]['messages'][2]['content'][:300])
+"
+
+# 4-3. (실제 업로드) — 본인 repo 로 바꾸어 사용
+# python push_to_hub.py \
+#   --input data/finetune_dataset.jsonl \
+#   --repo  <username>/<dataset-name> \
+#   --private
+```
+
+**확인 포인트**
+
+- `data/finetune_dataset.jsonl` 생성, 라인 수는 (요약 ∩ 필터 결과의 video_id 교집합) 수와 일치
+- 각 라인의 `messages` 가 정확히 `system → user → assistant` 3턴
+- `user.content` 에 자막·일반 댓글·타임스탬프 댓글 세 입력이 포함
+- `assistant.content` 가 3문단 산문 요약
+
+---
+
 ### 흐름 정리 (한 줄 요약)
 
 ```
-크롤링 → combined_data.jsonl
-       → (Gemini 필터) filtered_comments_gemini.jsonl
-       → (Gemini 요약) summarized_data_gemini.jsonl
+① 수집 (crawl_raw_data)   → combined_data.jsonl
+② 필터 (filter_kexaone)   → filtered_comments_gemini.jsonl
+③ 요약 (summarize)        → summarized_data_gemini.jsonl
+④ 데이터셋 (summarize)    → finetune_dataset.jsonl  ─► (push_to_hub.py) HF Hub
 ```
 
-세 단계 모두 5~10개 영상 정도의 소량 입력만으로 정상 동작 여부를 30분 안에 확인할 수 있도록 설계되어 있습니다.
+네 단계 모두 5~10개 영상 정도의 소량 입력만으로 정상 동작 여부를 30분 안에 확인할 수 있도록 설계되어 있습니다.
 
 ---
 
