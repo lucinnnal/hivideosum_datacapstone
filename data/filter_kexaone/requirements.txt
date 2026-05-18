@@ -1,2 +1,4 @@
 requests
 pyyaml
+google-genai
+google-cloud-aiplatform

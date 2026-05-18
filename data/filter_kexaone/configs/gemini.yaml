@@ -1,0 +1,12 @@
+model_name: "gemini-3-flash-preview"
+
+vertex:
+  project: "hivideosum"
+  location: "global"
+
+generation:
+  temperature: 0.1
+  top_p: 0.95
+  max_output_tokens: 8192
+  thinking:
+    thinking_level: low  # none | low | medium | high
