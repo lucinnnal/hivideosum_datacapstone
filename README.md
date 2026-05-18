@@ -6,9 +6,7 @@
 
 Hi-VideoSum은 **영상 프레임을 보지 않고** 두 가지 텍스트 신호—**자막(transcript)** 과 **시청자 댓글(comments)** —만으로 한국어 유튜브 영상을 3문단 산문으로 요약하는 sLLM 기반 서비스입니다.
 
-- 📄 **Dataset:** [`kim586w/hivideosum_training_dataset`](https://huggingface.co/datasets/kim586w/hivideosum_training_dataset)
-- 🌐 **Project page:** [`docs/page/index.html`](docs/page/index.html)
-- 📝 **Mid-term report:** [`docs/report/main.tex`](docs/report/main.tex)
+- 🌐 **Project page:** https://lucinnnal.github.io/hivideosum_datacapstone/page/
 
 ---
 
@@ -255,10 +253,10 @@ print('--- assistant preview ---'); print(r[0]['messages'][2]['content'][:300])
 "
 
 # 4-3. (실제 업로드) — 본인 repo 로 바꾸어 사용
-# python push_to_hub.py \
-#   --input data/finetune_dataset.jsonl \
-#   --repo  <username>/<dataset-name> \
-#   --private
+python push_to_hub.py \
+  --input data/finetune_dataset.jsonl \
+   --repo  kim586w/hvsum_sample \
+   --private
 ```
 
 **확인 포인트**
