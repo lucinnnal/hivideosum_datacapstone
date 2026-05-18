@@ -75,7 +75,7 @@ pip install -r requirements.txt
 
 | 컴포넌트 | 권장 conda env | 인증 / 키 |
 |---|---|---|
-| ① 수집 | `datacapstone` (Python 3.10) | (선택) `WEBSHARE_PROXY_*` 프록시 |
+| ① 수집 | `datacapstone` (Python 3.10) | `WEBSHARE_PROXY_USERNAME`·`WEBSHARE_PROXY_PASSWORD` (자막 API 차단/429 회피용, 권장) |
 | ② 필터링 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
 | ② 필터링 (K-EXAONE) | `kexaone_filter` (Python 3.11) | `K_EXAONE_API_KEY` |
 | ③ 요약 (Gemini) | `gemini_api` (Python 3.11) | `gcloud auth application-default login` |
@@ -85,12 +85,21 @@ pip install -r requirements.txt
 
 ### 1) 댓글 및 자막 크롤링 테스트
 
-**위치**: `data/crawl_raw_data/`
+**위치**: `data/crawl_raw_data/`  
+**프록시**: 자막(transcript) API 호출은 IP 차단·429 가 자주 발생하므로 **Webshare 로테이션 프록시 경유**를 기본으로 사용합니다.
 
 ```bash
 cd data/crawl_raw_data
 conda activate datacapstone
 pip install -r requirements.txt
+
+# 1-0. Webshare 프록시 자격 증명 설정 (권장)
+#  - https://www.webshare.io 가입 → 대시보드의 "Proxy → User & Password" 에서 발급
+#  - 무료 플랜 1GB/월 도 자막 스모크 테스트 정도엔 충분
+cp .env.example .env
+# .env 를 열어 아래 두 줄을 본인 자격 증명으로 채움
+#   WEBSHARE_PROXY_USERNAME=your_webshare_username
+#   WEBSHARE_PROXY_PASSWORD=your_webshare_password
 
 # 1-1. 채널 1~2개만 담은 테스트 입력 준비
 mkdir -p inputs
@@ -106,9 +115,12 @@ EOF
 
 **확인 포인트**
 
+- 실행 로그에 `[Proxy] Using Webshare rotating residential proxy` 가 찍혀야 함 (안 찍히면 `.env` 미반영 → 프록시 없이 동작 중)
 - `comment_results_test/combined_data.jsonl` 가 생성되고 최소 1라인 이상 기록되었는지
 - 각 레코드에 `transcript`, `regular_comments`, `timestamp_comments` 필드가 비어있지 않은지
 - `video_log.json` 의 상태 분포 (`collected` / `skipped` / `error`) — 전부 skipped 라면 채널·`fetch_limit` 조정 필요
+
+> 프록시 없이 돌리고 싶다면 `.env` 단계만 건너뛰면 됩니다. 다만 자막 API 가 429/IP 차단을 걸어 `skipped` 영상이 급증할 수 있습니다 (특히 한국 외 환경/대량 수집).
 
 ```bash
 # 빠른 검증

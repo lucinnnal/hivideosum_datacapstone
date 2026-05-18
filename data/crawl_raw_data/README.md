@@ -30,18 +30,42 @@ pip install -r requirements.txt
 
 ## 설정 (Environment Variables)
 
-선택적으로 `.env` 파일에 프록시 자격 증명을 설정할 수 있습니다.
+자막(transcript) API 는 IP 차단·429 가 빈번하므로 **Webshare 로테이션 프록시 경유를 권장**합니다.
+
+### Webshare 자격 증명 발급
+
+1. [Webshare](https://www.webshare.io) 가입 (무료 플랜 1GB/월 — 스모크 테스트엔 충분)
+2. 대시보드 **Proxy → User & Password** 메뉴에서 username/password 확인
+3. 아래 단계로 `.env` 작성
 
 ```bash
 cp .env.example .env
+# .env 편집
+#   WEBSHARE_PROXY_USERNAME=your_webshare_username
+#   WEBSHARE_PROXY_PASSWORD=your_webshare_password
 ```
 
 | 변수 | 필수 | 용도 |
 |------|------|------|
-| `WEBSHARE_PROXY_USERNAME` | 선택 | Webshare rotating residential 프록시 사용자명 |
-| `WEBSHARE_PROXY_PASSWORD` | 선택 | Webshare rotating residential 프록시 비밀번호 |
+| `WEBSHARE_PROXY_USERNAME` | **권장** | Webshare rotating residential 프록시 사용자명 |
+| `WEBSHARE_PROXY_PASSWORD` | **권장** | Webshare rotating residential 프록시 비밀번호 |
+| `TRANSCRIPT_HTTP_PROXY` / `TRANSCRIPT_HTTPS_PROXY` | 선택 | Webshare 대신 일반 HTTP/HTTPS 프록시를 쓸 때 |
 
-> `WEBSHARE_*` 변수가 `.env`에 설정되어 있으면 자막 수집 시 자동으로 프록시를 경유합니다.
+### 동작 우선순위
+
+`youtube_collector.py:_build_transcript_api()` 가 다음 순서로 프록시를 선택합니다:
+
+1. `WEBSHARE_PROXY_USERNAME` + `WEBSHARE_PROXY_PASSWORD` → **Webshare 로테이션 프록시** (권장)
+2. 위가 없고 `TRANSCRIPT_HTTP_PROXY`/`TRANSCRIPT_HTTPS_PROXY` 있음 → **일반 HTTP/HTTPS 프록시**
+3. 아무것도 없음 → **직접 호출** (대량 수집 시 차단 위험)
+
+활성 여부는 실행 로그에서 확인 가능합니다:
+
+```text
+  [Proxy] Using Webshare rotating residential proxy
+```
+
+> 프록시는 **자막(transcript) API 호출에만** 적용됩니다. yt-dlp(채널 영상 목록·메타데이터)와 youtube-comment-downloader(댓글)는 프록시 미적용입니다.
 
 ## 사용법
 
