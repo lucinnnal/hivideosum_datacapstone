@@ -4,7 +4,7 @@
 
 | 지표 | 무엇을 보는가 | 어떻게 측정 |
 | --- | --- | --- |
-| **Timestamp Alignment** | 예측 요약본에 적힌 시간(`3:24`)들이 입력 타임스탬프 댓글의 시간과 얼마나 일치하는가 — 환각 방지 + 커버리지 | 두 timestamp 집합의 set-based Precision / Recall / F1 (`±1s` tolerance) |
+| **Timestamp Alignment** | 예측 요약본에 적힌 시간(`3:24`)들이 입력 타임스탬프 댓글의 시간과 얼마나 일치하는가 — 환각 방지 + 커버리지 | 두 timestamp 집합의 set-based Precision / Recall / F1 (`±1s` tolerance). Gold는 [test_gold_timestamps.jsonl](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_gold_timestamps.jsonl)에 미리 파싱됨 |
 | **Content Alignment** | 예측 요약본이 정답 요약본과 **내용적으로** 얼마나 같은가 (단어 일치가 아니라 의미 일치) | 정답 요약본으로 만들어진 객관식 4지선다(MCQ, [test_mcq.jsonl](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_mcq.jsonl))를, Gemini가 **예측 요약본만 보고** 풀게 해서 그 정답률 |
 
 ---
@@ -78,13 +78,28 @@ python eval/generate_mcq.py \
 
 ### Step 2 — Timestamp Alignment
 
+미리 파싱해둔 gold timestamps([`test_gold_timestamps.jsonl`](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_gold_timestamps.jsonl))을 받아쓰면 매번 입력 댓글에서 정규식으로 다시 파싱할 필요가 없어요:
+
 ```bash
+mkdir -p eval/data
+huggingface-cli download kim586w/hivideosum test_gold_timestamps.jsonl \
+    --repo-type dataset --local-dir eval/data --local-dir-use-symlinks False
+
 python eval/timestamp_alignment.py \
     --predictions path/to/predictions.jsonl \
+    --gold-file   eval/data/test_gold_timestamps.jsonl \
     --output      eval/data/timestamp_per_video.jsonl
 ```
 
-표준 출력에 Macro Precision / Recall / F1이 찍히고, `--output`을 주면 영상별 metric이 JSONL로 떨어집니다.
+`--gold-file`을 생략하면 HF 데이터셋을 직접 로드해서 파싱합니다. 표준 출력에 Macro Precision / Recall / F1이 찍히고, `--output`을 주면 영상별 metric이 JSONL로 떨어집니다.
+
+**`test_gold_timestamps.jsonl` 포맷:**
+
+```jsonl
+{"video_id": "abc123", "channel_name": "...", "gold_timestamps": [105, 224, 430, 725]}
+```
+
+`gold_timestamps`는 입력 타임스탬프 댓글에서 정규식으로 뽑은 초 단위 정수 리스트.
 
 ### Step 3 — Content Alignment (MCQ 정확도)
 

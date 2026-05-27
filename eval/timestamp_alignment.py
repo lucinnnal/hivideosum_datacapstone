@@ -137,6 +137,31 @@ def macro_average(values: list[Optional[float]]) -> tuple[Optional[float], int]:
     return (sum(xs) / len(xs) if xs else None, len(xs))
 
 
+def load_gold_file(path: str) -> dict[str, list[int]]:
+    """Load pre-parsed gold timestamps from a JSONL file.
+
+    Each line must contain ``video_id`` and ``gold_timestamps`` (list[int]).
+    Use this to skip re-parsing the input timestamp section on every eval.
+
+    Args:
+        path: JSONL file path.
+
+    Returns:
+        Mapping from video_id to a list of gold timestamps (seconds).
+    """
+    gold_map: dict[str, list[int]] = {}
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            d = json.loads(line)
+            vid = d.get("video_id")
+            if vid is not None:
+                gold_map[vid] = list(d.get("gold_timestamps", []))
+    return gold_map
+
+
 def main() -> None:
     """CLI entry point — see ``--help`` for arguments."""
     ap = argparse.ArgumentParser(description=__doc__)
@@ -145,6 +170,15 @@ def main() -> None:
         "-p",
         required=True,
         help="JSONL of model predictions; each line has video_id + summary",
+    )
+    ap.add_argument(
+        "--gold-file",
+        default=None,
+        help=(
+            "Optional path to pre-parsed gold timestamps JSONL "
+            "(video_id + gold_timestamps). If given, --dataset/--split are "
+            "ignored. Download from HF: kim586w/hivideosum / test_gold_timestamps.jsonl"
+        ),
     )
     ap.add_argument("--dataset", default="kim586w/hivideosum")
     ap.add_argument("--split", default="test")
@@ -161,16 +195,23 @@ def main() -> None:
         print(f"error: predictions file not found: {args.predictions}", file=sys.stderr)
         sys.exit(1)
 
-    ds = load_dataset(args.dataset, split=args.split)
-
-    gold_map: dict[str, list[int]] = {}
-    for ex in ds:
-        user_msg = next(
-            (m["content"] for m in ex["messages"] if m["role"] == "user"),
-            "",
-        )
-        section = extract_timestamp_section(user_msg)
-        gold_map[ex["video_id"]] = extract_timestamps(section)
+    if args.gold_file:
+        if not os.path.exists(args.gold_file):
+            print(f"error: gold file not found: {args.gold_file}", file=sys.stderr)
+            sys.exit(1)
+        gold_map = load_gold_file(args.gold_file)
+        print(f"Loaded {len(gold_map)} gold records from {args.gold_file}")
+    else:
+        ds = load_dataset(args.dataset, split=args.split)
+        gold_map = {}
+        for ex in ds:
+            user_msg = next(
+                (m["content"] for m in ex["messages"] if m["role"] == "user"),
+                "",
+            )
+            section = extract_timestamp_section(user_msg)
+            gold_map[ex["video_id"]] = extract_timestamps(section)
+        print(f"Parsed {len(gold_map)} gold records from {args.dataset}:{args.split}")
 
     preds = load_predictions(args.predictions)
 
