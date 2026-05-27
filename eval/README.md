@@ -111,8 +111,6 @@ python eval/evaluate_mcq.py \
 
 ## 1. Timestamp Alignment 자세히
 
-자세한 수식 정의는 [`timestamp_alignment_metric.md`](timestamp_alignment_metric.md) 참조.
-
 ### 개념
 
 - **T_gold**: 입력 *타임스탬프 댓글*에 등장한 시간 집합 (초 단위로 정규화)
@@ -306,7 +304,6 @@ eval/
 ├── generate_mcq.py                    # Gemini로 MCQ 생성 (정답 요약본 입력)
 ├── evaluate_mcq.py                    # Gemini로 MCQ 풀이 & 채점 (예측 요약본 입력)
 ├── gemini.yaml                        # Gemini 생성 설정 (모델/temperature/thinking)
-├── timestamp_alignment_metric.md      # Timestamp metric 수식 정의 (원문)
 └── data/
     └── test_mcq.jsonl                 # 미리 생성된 MCQ (Step 0 결과)
 ```

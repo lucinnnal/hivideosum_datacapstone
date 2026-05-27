@@ -58,3 +58,6 @@ node_modules/
 # ======= demo videos ==========
 demo/*
 !.gitkeep
+
+# Internal metric spec notes
+eval/timestamp_alignment_metric.md
