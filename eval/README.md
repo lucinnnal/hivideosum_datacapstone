@@ -5,7 +5,7 @@
 | 지표 | 무엇을 보는가 | 어떻게 측정 |
 | --- | --- | --- |
 | **Timestamp Alignment** | 예측 요약본에 적힌 시간(`3:24`)들이 입력 타임스탬프 댓글의 시간과 얼마나 일치하는가 — 환각 방지 + 커버리지 | 두 timestamp 집합의 set-based Precision / Recall / F1 (`±1s` tolerance) |
-| **Content Alignment** | 예측 요약본이 정답 요약본과 **내용적으로** 얼마나 같은가 (단어 일치가 아니라 의미 일치) | 정답 요약본으로 만들어진 객관식 4지선다(MCQ)를, Gemini가 **예측 요약본만 보고** 풀게 해서 그 정답률 |
+| **Content Alignment** | 예측 요약본이 정답 요약본과 **내용적으로** 얼마나 같은가 (단어 일치가 아니라 의미 일치) | 정답 요약본으로 만들어진 객관식 4지선다(MCQ, [test_mcq.jsonl](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_mcq.jsonl))를, Gemini가 **예측 요약본만 보고** 풀게 해서 그 정답률 |
 
 ---
 
@@ -61,7 +61,7 @@ gcloud auth application-default login
 
 ### Step 0 — MCQ 생성 (보통 건너뜀)
 
-이미 생성된 MCQ가 HF 데이터셋(`kim586w/hivideosum`)에 `test_mcq.jsonl`로 올라가 있어 다시 만들 필요는 없습니다. 직접 만들고 싶다면:
+이미 생성된 MCQ가 HF 데이터셋(`kim586w/hivideosum`)에 [`test_mcq.jsonl`](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_mcq.jsonl)로 올라가 있어 다시 만들 필요는 없습니다. 직접 만들고 싶다면:
 
 ```bash
 python eval/generate_mcq.py \
@@ -88,8 +88,17 @@ python eval/timestamp_alignment.py \
 
 ### Step 3 — Content Alignment (MCQ 정확도)
 
+먼저 HF에서 미리 생성된 MCQ ([`test_mcq.jsonl`](https://huggingface.co/datasets/kim586w/hivideosum/blob/main/test_mcq.jsonl))를 받아옵니다 (`eval/data/`는 `.gitignore`로 관리):
+
 ```bash
-# HF에 올라간 test_mcq.jsonl 사용 (없으면 Step 0 먼저)
+mkdir -p eval/data
+huggingface-cli download kim586w/hivideosum test_mcq.jsonl \
+    --repo-type dataset --local-dir eval/data --local-dir-use-symlinks False
+```
+
+그다음 평가:
+
+```bash
 python eval/evaluate_mcq.py \
     --mcq         eval/data/test_mcq.jsonl \
     --predictions path/to/predictions.jsonl \
