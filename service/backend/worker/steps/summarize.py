@@ -7,7 +7,7 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from api.services import generate_summary
+from api.services import generate_summary, generate_summary_local
 from inference.prompts import (
     build_comments_text,
     build_summary_prompt,
@@ -32,8 +32,11 @@ def _split_paragraphs(text: str) -> tuple[str, str, str]:
 
 async def summarize(
     record: dict[str, Any],
-    vllm_client: AsyncOpenAI,
+    vllm_client: AsyncOpenAI | None,
     model_name: str,
+    *,
+    inference_backend: str = "vllm",
+    local_model_path: str = "",
 ) -> dict[str, Any]:
     """Compose the prompt and call vLLM. Returns a result dict ready to persist."""
     transcript_text = build_transcript_text(record.get("transcript", []))
@@ -48,9 +51,14 @@ async def summarize(
     timestamp_text = build_comments_text(passed_timestamp)
 
     prompt = build_summary_prompt(transcript_text, general_text, timestamp_text)
-    logger.info("Calling vLLM model=%s prompt_chars=%d", model_name, len(prompt))
-
-    raw_summary = await generate_summary(vllm_client, model_name, prompt)
+    if inference_backend.lower() == "transformers":
+        logger.info("Calling local transformers model=%s prompt_chars=%d", local_model_path, len(prompt))
+        raw_summary = await generate_summary_local(local_model_path, prompt)
+    else:
+        if vllm_client is None:
+            raise RuntimeError("summarize_failed:vllm_client_required")
+        logger.info("Calling vLLM model=%s prompt_chars=%d", model_name, len(prompt))
+        raw_summary = await generate_summary(vllm_client, model_name, prompt)
     p1, p2, p3 = _split_paragraphs(raw_summary)
 
     return {

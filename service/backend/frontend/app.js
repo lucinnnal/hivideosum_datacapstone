@@ -17,6 +17,8 @@ const $videoFrame = document.getElementById('video-frame');
 const $pipeline   = document.getElementById('pipeline');
 const $caption    = document.getElementById('progress-caption');
 const $results    = document.getElementById('results');
+const TS_RE = /\b(?:(\d+):)?([0-5]?\d):([0-5]\d)\b/g;
+let currentVideoId = null;
 
 function extractVideoId(url) {
   try {
@@ -30,6 +32,7 @@ function extractVideoId(url) {
 function showVideo(url) {
   const id = extractVideoId(url);
   if (!id) return;
+  currentVideoId = id;
   $videoFrame.src = `https://www.youtube.com/embed/${id}`;
   $videoWrap.classList.add('visible');
 }
@@ -44,6 +47,7 @@ function resetUI() {
   $errorBox.textContent = '';
   $errorBox.classList.remove('visible');
   $videoFrame.src = '';
+  currentVideoId = null;
   $videoWrap.classList.remove('visible');
   $pipeline.classList.remove('visible');
   $results.classList.remove('visible');
@@ -87,9 +91,9 @@ function renderResult(payload) {
   const s     = payload.summary      || {};
   const stats = payload.filter_stats || {};
 
-  document.getElementById('body-content').textContent    = s.content    || '';
-  document.getElementById('body-reaction').textContent   = s.reaction   || '';
-  document.getElementById('body-highlights').textContent = s.highlights || '';
+  setTimestampRichText(document.getElementById('body-content'), s.content || '');
+  setTimestampRichText(document.getElementById('body-reaction'), s.reaction || '');
+  setTimestampRichText(document.getElementById('body-highlights'), s.highlights || '');
 
   const gp = stats.passed_general   ?? '?';
   const gt = stats.total_general    ?? '?';
@@ -107,6 +111,59 @@ function renderResult(payload) {
   setTimeout(() => document.getElementById('card-1').classList.add('revealed'), 260);
   setTimeout(() => document.getElementById('card-2').classList.add('revealed'), 440);
   setTimeout(() => document.getElementById('filter-stats').classList.add('revealed'), 600);
+}
+
+function parseTimestampToSeconds(token) {
+  const parts = token.split(':').map((v) => Number(v));
+  if (parts.some((v) => Number.isNaN(v))) return null;
+  if (parts.length === 2) {
+    const [m, s] = parts;
+    return m * 60 + s;
+  }
+  if (parts.length === 3) {
+    const [h, m, s] = parts;
+    return h * 3600 + m * 60 + s;
+  }
+  return null;
+}
+
+function seekEmbedVideo(seconds) {
+  if (!currentVideoId) return;
+  const start = Math.max(0, Math.floor(seconds));
+  $videoFrame.src = `https://www.youtube.com/embed/${currentVideoId}?start=${start}&autoplay=1`;
+}
+
+function setTimestampRichText(targetEl, text) {
+  targetEl.textContent = '';
+  if (!text) return;
+
+  TS_RE.lastIndex = 0;
+  let last = 0;
+  let match;
+
+  while ((match = TS_RE.exec(text)) !== null) {
+    if (match.index > last) {
+      targetEl.appendChild(document.createTextNode(text.slice(last, match.index)));
+    }
+
+    const token = match[0];
+    const seconds = parseTimestampToSeconds(token);
+    if (seconds == null) {
+      targetEl.appendChild(document.createTextNode(token));
+    } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'timestamp-link';
+      btn.textContent = token;
+      btn.addEventListener('click', () => seekEmbedVideo(seconds));
+      targetEl.appendChild(btn);
+    }
+    last = match.index + token.length;
+  }
+
+  if (last < text.length) {
+    targetEl.appendChild(document.createTextNode(text.slice(last)));
+  }
 }
 
 async function pollJob(jobId) {

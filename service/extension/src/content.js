@@ -28,6 +28,8 @@
 
   const esc = (s) =>
     (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // Avoid linking time-like fragments inside ISO datetime strings (e.g. T16:57:09).
+  const TS_RE = /(?<![A-Za-z0-9])(?:(\d+):)?([0-5]?\d):([0-5]\d)\b/g;
 
   function getVideoId() {
     try {
@@ -148,9 +150,9 @@
     const s = payload.summary || {};
     const stats = payload.filter_stats || {};
 
-    el.querySelector('[data-body="content"]').textContent = s.content || '';
-    el.querySelector('[data-body="reaction"]').textContent = s.reaction || '';
-    el.querySelector('[data-body="highlights"]').textContent = s.highlights || '';
+    setTimestampRichText(el.querySelector('[data-body="content"]'), s.content || '');
+    setTimestampRichText(el.querySelector('[data-body="reaction"]'), s.reaction || '');
+    setTimestampRichText(el.querySelector('[data-body="highlights"]'), s.highlights || '');
 
     const gp = stats.passed_general ?? '?';
     const gt = stats.total_general ?? '?';
@@ -170,6 +172,71 @@
       setTimeout(() => card.classList.add('hvs-revealed'), 80 + i * 180);
     });
     setTimeout(() => el.querySelector('.hvs-stats').classList.add('hvs-revealed'), 80 + cards.length * 180);
+  }
+
+  function parseTimestampToSeconds(token) {
+    const parts = token.split(':').map((v) => Number(v));
+    if (parts.some((v) => Number.isNaN(v))) return null;
+    if (parts.length === 2) {
+      const [m, s] = parts;
+      return m * 60 + s;
+    }
+    if (parts.length === 3) {
+      const [h, m, s] = parts;
+      return h * 3600 + m * 60 + s;
+    }
+    return null;
+  }
+
+  function seekVideo(seconds) {
+    const videoEl = document.querySelector('video.html5-main-video, video');
+    if (videoEl) {
+      videoEl.currentTime = seconds;
+      videoEl.play().catch(() => {});
+      return;
+    }
+
+    // Fallback for cases where direct <video> access is delayed/unavailable.
+    const ytPlayer = document.querySelector('#movie_player');
+    if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
+      ytPlayer.seekTo(seconds, true);
+      if (typeof ytPlayer.playVideo === 'function') {
+        ytPlayer.playVideo();
+      }
+    }
+  }
+
+  function setTimestampRichText(targetEl, text) {
+    targetEl.textContent = '';
+    if (!text) return;
+
+    TS_RE.lastIndex = 0;
+    let last = 0;
+    let match;
+
+    while ((match = TS_RE.exec(text)) !== null) {
+      if (match.index > last) {
+        targetEl.appendChild(document.createTextNode(text.slice(last, match.index)));
+      }
+
+      const token = match[0];
+      const seconds = parseTimestampToSeconds(token);
+      if (seconds == null) {
+        targetEl.appendChild(document.createTextNode(token));
+      } else {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hvs-ts-btn';
+        btn.textContent = token;
+        btn.addEventListener('click', () => seekVideo(seconds));
+        targetEl.appendChild(btn);
+      }
+      last = match.index + token.length;
+    }
+
+    if (last < text.length) {
+      targetEl.appendChild(document.createTextNode(text.slice(last)));
+    }
   }
 
   function startSummarize(el) {

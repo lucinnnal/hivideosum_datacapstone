@@ -1,4 +1,4 @@
-"""Prose summary prompt for the fine-tuned sLLM (served by vLLM).
+    """Prose summary prompt for the fine-tuned sLLM (served by vLLM).
 
 Mirrors data_construction/summarize_project/summarize_with_gemini.py so that
 inference-time prompts match training-time prompts exactly.

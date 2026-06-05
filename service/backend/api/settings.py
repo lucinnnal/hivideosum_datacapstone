@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     VLLM_BASE_URL: str = "http://vllm:8001/v1"
     VLLM_MODEL_NAME: str = "hivideosum"
     VLLM_API_KEY: str = "dummy"
+    INFERENCE_BACKEND: str = "vllm"  # vllm | transformers
+    LOCAL_MODEL_PATH: str = "/scratch/x3411a08/hivideosum_merged_gemma4_clm"
 
     # Redis (used by both arq and the result cache)
     REDIS_URL: str = "redis://redis:6379/0"
@@ -25,6 +27,8 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     RESULT_TTL_SECONDS: int = 86400
+    DEMO_MODE: bool = False
+    DIRECT_MODE: bool = False
 
     # Collection limits
     COLLECT_MAX_REGULAR: int = 50

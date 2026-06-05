@@ -95,4 +95,15 @@ async def filter_comments(
                 continue
             break
 
+    # Fallback for local/dev runs without Vertex ADC:
+    # mark every collected comment as pass so summarization can continue.
+    msg = str(last_err) if last_err is not None else ""
+    if "default credentials were not found" in msg.lower():
+        logger.warning("Gemini ADC not found; fallback to all-pass comment filter.")
+        record["evaluation_result"] = {
+            "general_comments": [{"id": f"g{i}", "is_pass": True} for i in range(len(regular))],
+            "timestamp_comments": [{"id": f"t{i}", "is_pass": True} for i in range(len(timestamp))],
+        }
+        return record
+
     raise RuntimeError(f"filter_failed: {last_err}")

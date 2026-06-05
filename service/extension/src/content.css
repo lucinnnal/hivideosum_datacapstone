@@ -249,6 +249,23 @@
   white-space: pre-wrap;
 }
 
+#hvs-panel .hvs-ts-btn {
+  border: 0;
+  background: none;
+  color: var(--hvs-accent);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 .05rem;
+}
+
+#hvs-panel .hvs-ts-btn:hover {
+  opacity: .85;
+}
+
 #hvs-panel .hvs-stats {
   display: flex;
   gap: 1.5rem;

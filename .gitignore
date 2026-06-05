@@ -33,6 +33,7 @@ training/gemma_lora/data/finetune_dataset.jsonl
 
 # LoRA adapter weights served by vLLM — distributed separately.
 # Keep adapter_config.json so the serving layout is reproducible.
+*.safetensors
 service/backend/inference/adapters/**/*.safetensors
 service/backend/inference/adapters/**/*.bin
 
